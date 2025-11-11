@@ -399,6 +399,11 @@
         const OWNER = 'aliridof';
         const REPO = 'aliridof-trial';
         const BRANCH = 'main'; // Ganti ke 'master' jika perlu
+
+// ⚠️ PENTING: Jangan share token ini ke publik!
+// Untuk keamanan lebih baik, gunakan GitHub Actions
+const TOKEN = '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'; // Ganti dengan token Anda
+        
         const GITHUB_API = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
         
         let treeStructure = null;
