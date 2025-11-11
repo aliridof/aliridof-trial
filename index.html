@@ -163,6 +163,7 @@
             padding: 20px;
             border-radius: 8px;
             border-left: 4px solid #c33;
+            white-space: pre-wrap;
         }
         
         a {
@@ -321,6 +322,12 @@
             align-items: center;
             gap: 5px;
         }
+
+        .progress {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -369,7 +376,10 @@
             <button onclick="copyAllRawLinks()">📋 Copy All Raw Links</button>
         </div>
 
-        <div id="tree" class="loading">Memuat struktur repository...</div>
+        <div id="tree" class="loading">
+            Memuat struktur repository...
+            <div class="progress" id="progress"></div>
+        </div>
 
         <footer>
             <p>
@@ -399,55 +409,100 @@
         const OWNER = 'aliridof';
         const REPO = 'aliridof-trial';
         const BRANCH = 'main'; // Ganti ke 'master' jika perlu
-
-// ⚠️ PENTING: Jangan share token ini ke publik!
-// Untuk keamanan lebih baik, gunakan GitHub Actions
-const TOKEN = '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'; // Ganti dengan token Anda
         
-        const GITHUB_API = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
-        
-        let treeStructure = null;
+        let treeStructure = {};
         let allFiles = [];
 
         async function loadTree() {
             const treeDiv = document.getElementById('tree');
+            const progressDiv = document.getElementById('progress');
             treeDiv.className = 'loading';
-            treeDiv.innerHTML = 'Memuat struktur repository...';
+            treeDiv.innerHTML = 'Memuat struktur repository...<div class="progress" id="progress"></div>';
             
             try {
-                const response = await fetch(GITHUB_API);
+                progressDiv.textContent = 'Mengambil data dari GitHub...';
+                
+                // Metode alternatif: scan folder secara rekursif
+                const tree = await scanDirectory('');
+                
+                allFiles = tree;
+                treeStructure = buildStructure(tree);
+                renderFullTree();
+                
+                updateStats(tree);
+                updateGenerationTime();
+            } catch (error) {
+                console.error('Error:', error);
+                treeDiv.className = 'error';
+                treeDiv.innerHTML = `❌ Error loading repository structure
+
+Detail: ${error.message}
+
+💡 Solusi yang bisa dicoba:
+
+1. Pastikan repository "${REPO}" adalah PUBLIC
+2. Cek nama repository sudah benar
+3. Cek branch name: "${BRANCH}" (coba ganti ke "master" jika perlu)
+4. Tunggu beberapa menit (mungkin rate limit GitHub)
+5. Buka Console (F12) untuk lihat detail error
+
+Atau gunakan metode alternatif:
+• Gunakan GitHub Actions untuk generate static list
+• Buat manual list di repository`;
+            }
+        }
+
+        async function scanDirectory(path) {
+            const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`;
+            const progressDiv = document.getElementById('progress');
+            
+            try {
+                progressDiv.textContent = `Scanning: ${path || 'root'}...`;
+                
+                const response = await fetch(url);
                 
                 if (!response.ok) {
+                    if (response.status === 403) {
+                        throw new Error('GitHub API Rate Limit tercapai. Silakan coba lagi dalam 1 jam atau gunakan Personal Access Token.');
+                    }
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
+                let files = [];
                 
-                if (data.tree) {
-                    allFiles = data.tree;
-                    treeStructure = buildStructure(data.tree);
-                    renderFullTree();
+                for (const item of data) {
+                    // Skip hidden files
+                    if (item.name.startsWith('.')) continue;
+                    if (item.name === 'node_modules') continue;
                     
-                    updateStats(data.tree);
-                    updateGenerationTime();
-                } else {
-                    throw new Error('No tree data found');
+                    files.push({
+                        path: item.path,
+                        type: item.type === 'dir' ? 'tree' : 'blob',
+                        name: item.name
+                    });
+                    
+                    // Recursive scan untuk folder (dengan limit)
+                    if (item.type === 'dir' && files.length < 100) {
+                        const subFiles = await scanDirectory(item.path);
+                        files = files.concat(subFiles);
+                        
+                        // Delay untuk menghindari rate limit
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
                 }
+                
+                return files;
             } catch (error) {
-                console.error('Error:', error);
-                treeDiv.className = 'error';
-                treeDiv.innerHTML = `❌ Error loading repository structure\n\nDetail: ${error.message}\n\nPastikan:\n• Repository "${REPO}" ada dan public\n• Branch "${BRANCH}" benar\n• Username "${OWNER}" benar`;
+                console.error('Scan error:', error);
+                throw error;
             }
         }
         
         function buildStructure(files) {
-            const ignore = ['.git', 'node_modules', 'vendor', '.github', '.DS_Store'];
             const tree = {};
             
             files.forEach(file => {
-                if (ignore.some(i => file.path.includes(i))) return;
-                if (file.path.startsWith('.')) return;
-                
                 const parts = file.path.split('/');
                 let current = tree;
                 
