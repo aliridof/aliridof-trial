@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -78,11 +78,77 @@
             border-radius: 10px;
             font-family: 'Courier New', 'Consolas', monospace;
             font-size: 14px;
-            line-height: 2;
-            white-space: pre;
+            line-height: 2.2;
             overflow-x: auto;
             border: 2px solid #e9ecef;
         }
+        
+        .tree-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 2px 0;
+        }
+        
+        .tree-prefix {
+            white-space: pre;
+            color: #999;
+        }
+        
+        .tree-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .file-name {
+            color: #2c3e50;
+        }
+        
+        .folder {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .file-actions {
+            display: inline-flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .tree-line:hover .file-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            padding: 3px 8px;
+            font-size: 11px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        .action-btn:hover {
+            background: #764ba2;
+            transform: translateY(-1px);
+        }
+        
+        .action-btn.view { background: #667eea; }
+        .action-btn.raw { background: #28a745; }
+        .action-btn.download { background: #ff6b6b; }
+        
+        .action-btn.view:hover { background: #5568d3; }
+        .action-btn.raw:hover { background: #218838; }
+        .action-btn.download:hover { background: #ee5a52; }
         
         .loading {
             text-align: center;
@@ -107,12 +173,6 @@
         
         a:hover {
             color: #764ba2;
-            text-decoration: underline;
-        }
-        
-        .folder {
-            color: #2c3e50;
-            font-weight: 600;
         }
         
         footer {
@@ -164,6 +224,76 @@
             border-color: #667eea;
         }
 
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .url-box {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            background: #f8f9fa;
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .copy-btn.copied {
+            background: #667eea;
+        }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -174,6 +304,23 @@
             animation: spin 2s linear infinite;
             margin-right: 10px;
         }
+
+        .legend {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -183,7 +330,7 @@
                 <span>📦</span>
                 <span>aliridof-trial</span>
             </h1>
-            <p class="subtitle">Struktur Repository - Auto Generated</p>
+            <p class="subtitle">Struktur Repository - Auto Generated dengan Raw Links</p>
         </header>
 
         <div class="stats">
@@ -201,11 +348,25 @@
             </div>
         </div>
 
+        <div class="legend">
+            <div class="legend-item">
+                <span class="action-btn view" style="opacity: 1;">📄 View</span>
+                <span>Lihat file di GitHub</span>
+            </div>
+            <div class="legend-item">
+                <span class="action-btn raw" style="opacity: 1;">📋 Raw</span>
+                <span>Link raw file (copy URL)</span>
+            </div>
+            <div class="legend-item">
+                <span class="action-btn download" style="opacity: 1;">📥 Download</span>
+                <span>Download file langsung</span>
+            </div>
+        </div>
+
         <div class="controls">
             <input type="text" class="search-box" id="searchBox" placeholder="🔍 Cari file atau folder...">
             <button onclick="loadTree()">🔄 Refresh</button>
-            <button onclick="expandAll()">📂 Expand All</button>
-            <button onclick="collapseAll()">📁 Collapse All</button>
+            <button onclick="copyAllRawLinks()">📋 Copy All Raw Links</button>
         </div>
 
         <div id="tree" class="loading">Memuat struktur repository...</div>
@@ -223,14 +384,25 @@
         </footer>
     </div>
 
+    <!-- Modal for Raw URL -->
+    <div id="rawModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h2 style="margin-bottom: 15px; color: #667eea;">📋 Raw File URL</h2>
+            <p style="color: #666; margin-bottom: 10px;">File: <strong id="modalFileName"></strong></p>
+            <input type="text" id="rawUrlBox" class="url-box" readonly>
+            <button class="copy-btn" onclick="copyRawUrl()">📋 Copy URL</button>
+        </div>
+    </div>
+
     <script>
         const OWNER = 'aliridof';
         const REPO = 'aliridof-trial';
-        const BRANCH = 'main'; // Ganti ke 'master' jika branch utama adalah master
+        const BRANCH = 'main'; // Ganti ke 'master' jika perlu
         const GITHUB_API = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
         
-        let fullTreeData = '';
         let treeStructure = null;
+        let allFiles = [];
 
         async function loadTree() {
             const treeDiv = document.getElementById('tree');
@@ -247,10 +419,9 @@
                 const data = await response.json();
                 
                 if (data.tree) {
+                    allFiles = data.tree;
                     treeStructure = buildStructure(data.tree);
-                    fullTreeData = renderTree(treeStructure);
-                    treeDiv.innerHTML = fullTreeData;
-                    treeDiv.className = '';
+                    renderFullTree();
                     
                     updateStats(data.tree);
                     updateGenerationTime();
@@ -260,7 +431,7 @@
             } catch (error) {
                 console.error('Error:', error);
                 treeDiv.className = 'error';
-                treeDiv.innerHTML = `❌ Error loading repository structure\n\nDetail: ${error.message}\n\nPastikan:\n• Repository "${REPO}" ada dan public\n• Branch "${BRANCH}" benar (coba ganti ke "master" jika perlu)\n• Username "${OWNER}" benar`;
+                treeDiv.innerHTML = `❌ Error loading repository structure\n\nDetail: ${error.message}\n\nPastikan:\n• Repository "${REPO}" ada dan public\n• Branch "${BRANCH}" benar\n• Username "${OWNER}" benar`;
             }
         }
         
@@ -269,7 +440,6 @@
             const tree = {};
             
             files.forEach(file => {
-                // Skip ignored paths
                 if (ignore.some(i => file.path.includes(i))) return;
                 if (file.path.startsWith('.')) return;
                 
@@ -291,39 +461,159 @@
             return tree;
         }
         
-        function renderTree(node, prefix = '', isLast = true, isRoot = true) {
-            let output = '';
+        function renderFullTree() {
+            const treeDiv = document.getElementById('tree');
+            treeDiv.className = '';
+            treeDiv.innerHTML = '';
+            
+            // Root
+            const rootLine = createTreeLine('', `${REPO}/`, null, true, true);
+            treeDiv.appendChild(rootLine);
+            
+            // Children
+            renderTreeNode(treeStructure, '', true, treeDiv);
+        }
+        
+        function renderTreeNode(node, prefix, isRoot, container) {
             const entries = Object.entries(node).sort((a, b) => {
-                // Folders first, then files
                 if (a[1].type === 'tree' && b[1].type !== 'tree') return -1;
                 if (a[1].type !== 'tree' && b[1].type === 'tree') return 1;
                 return a[0].localeCompare(b[0]);
             });
             
-            if (isRoot) {
-                output += `${REPO}/\n`;
-            }
-            
             entries.forEach(([name, data], index) => {
-                const last = index === entries.length - 1;
-                const connector = last ? '└── ' : '├── ';
+                const isLast = index === entries.length - 1;
+                const connector = isLast ? '└── ' : '├── ';
                 const icon = getIcon(name, data.type);
                 
-                output += prefix + connector + icon + ' ';
+                const line = createTreeLine(
+                    prefix + connector,
+                    icon + ' ' + name + (data.type === 'tree' ? '/' : ''),
+                    data,
+                    data.type === 'tree',
+                    false
+                );
                 
-                if (data.type === 'blob') {
-                    output += `<a href="https://github.com/${OWNER}/${REPO}/blob/${BRANCH}/${data.path}" target="_blank">${name}</a>\n`;
-                } else {
-                    output += `<span class="folder">${name}/</span>\n`;
-                }
+                container.appendChild(line);
                 
                 if (Object.keys(data.children).length > 0) {
-                    const newPrefix = prefix + (last ? '    ' : '│   ');
-                    output += renderTree(data.children, newPrefix, last, false);
+                    const newPrefix = prefix + (isLast ? '    ' : '│   ');
+                    renderTreeNode(data.children, newPrefix, false, container);
                 }
             });
+        }
+        
+        function createTreeLine(prefix, text, data, isFolder, isRoot) {
+            const line = document.createElement('div');
+            line.className = 'tree-line';
             
-            return output;
+            const prefixSpan = document.createElement('span');
+            prefixSpan.className = 'tree-prefix';
+            prefixSpan.textContent = prefix;
+            
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'tree-item';
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = isFolder ? 'folder' : 'file-name';
+            nameSpan.textContent = text;
+            
+            itemDiv.appendChild(nameSpan);
+            
+            // Add action buttons for files
+            if (data && data.type === 'blob') {
+                const actions = document.createElement('span');
+                actions.className = 'file-actions';
+                
+                // View button
+                const viewBtn = document.createElement('a');
+                viewBtn.href = getViewUrl(data.path);
+                viewBtn.target = '_blank';
+                viewBtn.className = 'action-btn view';
+                viewBtn.innerHTML = '📄 View';
+                viewBtn.title = 'Lihat file di GitHub';
+                
+                // Raw button
+                const rawBtn = document.createElement('button');
+                rawBtn.className = 'action-btn raw';
+                rawBtn.innerHTML = '📋 Raw';
+                rawBtn.title = 'Copy raw URL';
+                rawBtn.onclick = () => showRawModal(data.path, text);
+                
+                // Download button
+                const downloadBtn = document.createElement('a');
+                downloadBtn.href = getRawUrl(data.path);
+                downloadBtn.download = text;
+                downloadBtn.className = 'action-btn download';
+                downloadBtn.innerHTML = '📥 Download';
+                downloadBtn.title = 'Download file';
+                
+                actions.appendChild(viewBtn);
+                actions.appendChild(rawBtn);
+                actions.appendChild(downloadBtn);
+                
+                itemDiv.appendChild(actions);
+            }
+            
+            line.appendChild(prefixSpan);
+            line.appendChild(itemDiv);
+            
+            return line;
+        }
+        
+        function getViewUrl(path) {
+            return `https://github.com/${OWNER}/${REPO}/blob/${BRANCH}/${path}`;
+        }
+        
+        function getRawUrl(path) {
+            return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}`;
+        }
+        
+        function showRawModal(path, filename) {
+            const modal = document.getElementById('rawModal');
+            const fileNameSpan = document.getElementById('modalFileName');
+            const urlBox = document.getElementById('rawUrlBox');
+            
+            fileNameSpan.textContent = filename;
+            urlBox.value = getRawUrl(path);
+            
+            modal.classList.add('show');
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('rawModal');
+            modal.classList.remove('show');
+        }
+        
+        function copyRawUrl() {
+            const urlBox = document.getElementById('rawUrlBox');
+            urlBox.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Copied!';
+            btn.classList.add('copied');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('copied');
+                closeModal();
+            }, 1500);
+        }
+        
+        function copyAllRawLinks() {
+            const files = allFiles.filter(f => f.type === 'blob');
+            const rawLinks = files.map(f => getRawUrl(f.path)).join('\n');
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = rawLinks;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            alert(`✅ ${files.length} raw links berhasil di-copy ke clipboard!`);
         }
         
         function getIcon(filename, type) {
@@ -331,58 +621,15 @@
             
             const ext = filename.split('.').pop().toLowerCase();
             const icons = {
-                // Documents
-                'md': '📝',
-                'txt': '📄',
-                'pdf': '📕',
-                'doc': '📘',
-                'docx': '📘',
-                
-                // Web
-                'html': '🌐',
-                'htm': '🌐',
-                'css': '🎨',
-                'scss': '🎨',
-                'sass': '🎨',
-                'js': '⚡',
-                'ts': '💠',
-                'jsx': '⚛️',
-                'tsx': '⚛️',
-                'vue': '💚',
-                
-                // Data
-                'json': '📋',
-                'xml': '📋',
-                'yml': '⚙️',
-                'yaml': '⚙️',
-                'csv': '📊',
-                
-                // Images
-                'png': '🖼️',
-                'jpg': '🖼️',
-                'jpeg': '🖼️',
-                'gif': '🎞️',
-                'svg': '🎨',
-                'ico': '🎯',
-                'webp': '🖼️',
-                
-                // Programming
-                'py': '🐍',
-                'java': '☕',
-                'cpp': '⚙️',
-                'c': '⚙️',
-                'go': '🐹',
-                'rs': '🦀',
-                'php': '🐘',
-                'rb': '💎',
-                
-                // Others
-                'zip': '📦',
-                'tar': '📦',
-                'gz': '📦',
-                'sh': '🔧',
-                'bat': '🔧',
-                'exe': '⚙️'
+                'md': '📝', 'txt': '📄', 'pdf': '📕', 'doc': '📘', 'docx': '📘',
+                'html': '🌐', 'htm': '🌐', 'css': '🎨', 'scss': '🎨', 'sass': '🎨',
+                'js': '⚡', 'ts': '💠', 'jsx': '⚛️', 'tsx': '⚛️', 'vue': '💚',
+                'json': '📋', 'xml': '📋', 'yml': '⚙️', 'yaml': '⚙️', 'csv': '📊',
+                'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🎞️', 'svg': '🎨',
+                'ico': '🎯', 'webp': '🖼️',
+                'py': '🐍', 'java': '☕', 'cpp': '⚙️', 'c': '⚙️', 'go': '🐹',
+                'rs': '🦀', 'php': '🐘', 'rb': '💎',
+                'zip': '📦', 'tar': '📦', 'gz': '📦', 'sh': '🔧', 'bat': '🔧'
             };
             
             return icons[ext] || '📄';
@@ -409,26 +656,25 @@
         document.getElementById('searchBox').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const treeDiv = document.getElementById('tree');
+            const lines = treeDiv.querySelectorAll('.tree-line');
             
             if (!searchTerm) {
-                treeDiv.innerHTML = fullTreeData;
+                lines.forEach(line => line.style.display = 'flex');
                 return;
             }
             
-            const lines = fullTreeData.split('\n');
-            const filtered = lines.filter(line => 
-                line.toLowerCase().includes(searchTerm)
-            ).join('\n');
-            
-            treeDiv.innerHTML = filtered || '<div class="error">Tidak ditemukan hasil untuk "' + searchTerm + '"</div>';
+            lines.forEach(line => {
+                const text = line.textContent.toLowerCase();
+                line.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
         });
         
-        function expandAll() {
-            alert('Feature coming soon! 🚀');
-        }
-        
-        function collapseAll() {
-            alert('Feature coming soon! 🚀');
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('rawModal');
+            if (event.target === modal) {
+                closeModal();
+            }
         }
         
         // Load tree on page load
