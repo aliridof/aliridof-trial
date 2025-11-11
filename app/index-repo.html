@@ -85,8 +85,7 @@
             font-size: 0.9em;
         }
 
-        .input-field input,
-        .input-field select {
+        .input-field input {
             padding: 12px 15px;
             border: 2px solid #e1e8ed;
             border-radius: 8px;
@@ -95,8 +94,7 @@
             background: white;
         }
 
-        .input-field input:focus,
-        .input-field select:focus {
+        .input-field input:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -129,29 +127,6 @@
             background: #ccc;
             cursor: not-allowed;
             box-shadow: none;
-        }
-
-        .quick-select {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 15px;
-        }
-
-        .quick-btn {
-            padding: 8px 15px;
-            background: white;
-            border: 2px solid #667eea;
-            color: #667eea;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        .quick-btn:hover {
-            background: #667eea;
-            color: white;
         }
 
         .current-repo {
@@ -275,14 +250,15 @@
         }
         
         .action-btn:hover {
-            background: #764ba2;
             transform: translateY(-1px);
         }
         
+        .action-btn.access { background: #9c27b0; }
         .action-btn.view { background: #667eea; }
         .action-btn.raw { background: #28a745; }
         .action-btn.download { background: #ff6b6b; }
         
+        .action-btn.access:hover { background: #7b1fa2; }
         .action-btn.view:hover { background: #5568d3; }
         .action-btn.raw:hover { background: #218838; }
         .action-btn.download:hover { background: #ee5a52; }
@@ -504,9 +480,7 @@
                     <label for="username">👤 Username GitHub</label>
                     <input 
                         type="text" 
-                        id="username" 
-                        placeholder="Contoh: Raydi" 
-                        value="aliridof"
+                        id="username"
                     >
                 </div>
                 
@@ -514,35 +488,23 @@
                     <label for="repository">📦 Nama Repository</label>
                     <input 
                         type="text" 
-                        id="repository" 
-                        placeholder="Contoh: Asdf" 
-                        value="aliridof-trial"
+                        id="repository"
                     >
                 </div>
                 
                 <div class="input-field">
                     <label for="branch">🌿 Branch</label>
-                    <select id="branch">
-                        <option value="main">main</option>
-                        <option value="master">master</option>
-                        <option value="dev">dev</option>
-                        <option value="develop">develop</option>
-                    </select>
+                    <input 
+                        type="text" 
+                        id="branch" 
+                        value="main"
+                    >
                 </div>
             </div>
 
             <button class="load-btn" onclick="loadTreeFromInput()">
                 🚀 Load Repository
             </button>
-
-            <div class="quick-select">
-                <strong style="width: 100%; margin-bottom: 5px; color: #666;">Quick Select:</strong>
-                <button class="quick-btn" onclick="quickLoad('facebook', 'react', 'main')">⚛️ React</button>
-                <button class="quick-btn" onclick="quickLoad('vuejs', 'vue', 'main')">💚 Vue.js</button>
-                <button class="quick-btn" onclick="quickLoad('microsoft', 'vscode', 'main')">📝 VS Code</button>
-                <button class="quick-btn" onclick="quickLoad('torvalds', 'linux', 'master')">🐧 Linux</button>
-                <button class="quick-btn" onclick="quickLoad('nodejs', 'node', 'main')">🟢 Node.js</button>
-            </div>
         </div>
 
         <!-- Current Repository Info -->
@@ -572,6 +534,10 @@
         <!-- Legend -->
         <div class="legend" id="legendSection" style="display: none;">
             <div class="legend-item">
+                <span class="action-btn access" style="opacity: 1;">🌐 Access</span>
+                <span>Akses via GitHub Pages</span>
+            </div>
+            <div class="legend-item">
                 <span class="action-btn view" style="opacity: 1;">📄 View</span>
                 <span>Lihat file di GitHub</span>
             </div>
@@ -594,7 +560,7 @@
 
         <!-- Tree Display -->
         <div id="tree" class="empty">
-            📁 Masukkan username dan repository, lalu klik "Load Repository" untuk melihat strukturnya
+            🚀 Siap untuk explore repository!
         </div>
 
         <footer>
@@ -626,17 +592,10 @@
         let treeStructure = {};
         let allFiles = [];
 
-        function quickLoad(owner, repo, branch) {
-            document.getElementById('username').value = owner;
-            document.getElementById('repository').value = repo;
-            document.getElementById('branch').value = branch;
-            loadTreeFromInput();
-        }
-
         function loadTreeFromInput() {
             const username = document.getElementById('username').value.trim();
             const repository = document.getElementById('repository').value.trim();
-            const branch = document.getElementById('branch').value;
+            const branch = document.getElementById('branch').value.trim() || 'main';
 
             if (!username || !repository) {
                 alert('❌ Username dan Repository harus diisi!');
@@ -704,8 +663,8 @@ Detail: ${error.message}
 
 1. Repository "${REPO}" tidak ditemukan atau private
 2. Username "${OWNER}" salah
-3. Branch "${BRANCH}" tidak ada (coba ganti branch)
-4. GitHub API Rate Limit (tunggu 1 jam atau gunakan token)
+3. Branch "${BRANCH}" tidak ada
+4. GitHub API Rate Limit (tunggu 1 jam)
 5. Repository kosong
 
 Pastikan repository adalah PUBLIC dan nama sudah benar!`;
@@ -855,6 +814,14 @@ Pastikan repository adalah PUBLIC dan nama sudah benar!`;
                 const actions = document.createElement('span');
                 actions.className = 'file-actions';
                 
+                // Access button (GitHub Pages)
+                const accessBtn = document.createElement('a');
+                accessBtn.href = getAccessUrl(data.path);
+                accessBtn.target = '_blank';
+                accessBtn.className = 'action-btn access';
+                accessBtn.innerHTML = '🌐 Access';
+                accessBtn.title = 'Akses via GitHub Pages';
+                
                 // View button
                 const viewBtn = document.createElement('a');
                 viewBtn.href = getViewUrl(data.path);
@@ -878,6 +845,7 @@ Pastikan repository adalah PUBLIC dan nama sudah benar!`;
                 downloadBtn.innerHTML = '📥 Download';
                 downloadBtn.title = 'Download file';
                 
+                actions.appendChild(accessBtn);
                 actions.appendChild(viewBtn);
                 actions.appendChild(rawBtn);
                 actions.appendChild(downloadBtn);
@@ -889,6 +857,11 @@ Pastikan repository adalah PUBLIC dan nama sudah benar!`;
             line.appendChild(itemDiv);
             
             return line;
+        }
+        
+        function getAccessUrl(path) {
+            // Format: https://username.github.io/repository/path/to/file
+            return `https://${OWNER}.github.io/${REPO}/${path}`;
         }
         
         function getViewUrl(path) {
@@ -1005,6 +978,10 @@ Pastikan repository adalah PUBLIC dan nama sudah benar!`;
         });
         
         document.getElementById('repository').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') loadTreeFromInput();
+        });
+        
+        document.getElementById('branch').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') loadTreeFromInput();
         });
         
