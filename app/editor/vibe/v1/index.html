@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inspect Element MVP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: #252526;
+      border-bottom: 1px solid #3e3e42;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      background: transparent;
+      border: none;
+      color: #858585;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      background: #2a2d2e;
+      color: #d4d4d4;
+    }
+
+    .tab.active {
+      background: #1e1e1e;
+      color: #ffffff;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      background: #0e639c;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #1177bb;
+    }
+
+    .btn.inspect-btn {
+      background: #3e3e42;
+    }
+
+    .btn.inspect-btn.active {
+      background: #0e639c;
+    }
+
+    /* Main Content */
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Code Tab */
+    .code-editor {
+      display: none;
+      flex-direction: column;
+      padding: 20px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .code-editor.active {
+      display: flex;
+    }
+
+    .code-editor textarea {
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+      background: #1e1e1e;
+      border: 1px solid #3e3e42;
+      color: #d4d4d4;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      resize: none;
+      border-radius: 4px;
+    }
+
+    .code-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Preview Tab */
+    .preview-container {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-container.active {
+      display: flex;
+    }
+
+    .url-bar {
+      padding: 12px 20px;
+      background: #252526;
+      border-bottom: 1px solid #3e3e42;
+      display: flex;
+      gap: 8px;
+    }
+
+    .url-bar input {
+      flex: 1;
+      padding: 8px 12px;
+      background: #3c3c3c;
+      border: 1px solid #3e3e42;
+      color: #d4d4d4;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .preview-wrapper {
+      flex: 1;
+      position: relative;
+      background: white;
+    }
+
+    .preview-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+    }
+
+    /* Inspect Overlay */
+    .inspect-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.01);
+      cursor: crosshair;
+      display: none;
+      pointer-events: none;
+    }
+
+    .inspect-overlay.active {
+      display: block;
+      pointer-events: all;
+    }
+
+    .inspect-badge {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      padding: 6px 12px;
+      background: #0e639c;
+      color: white;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      display: none;
+    }
+
+    .inspect-badge.active {
+      display: block;
+    }
+
+    /* Chat Area */
+    .chat-area {
+      width: 100%;
+      height: 300px;
+      background: #252526;
+      border-top: 1px solid #3e3e42;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      padding: 12px;
+      background: #1e1e1e;
+      border-radius: 6px;
+      border-left: 3px solid #0e639c;
+    }
+
+    .message.selected {
+      border-left-color: #4ec9b0;
+    }
+
+    .message pre {
+      margin-top: 8px;
+      padding: 8px;
+      background: #2d2d30;
+      border-radius: 4px;
+      font-size: 13px;
+      overflow-x: auto;
+      color: #ce9178;
+    }
+
+    .chat-input-area {
+      padding: 16px;
+      background: #1e1e1e;
+      border-top: 1px solid #3e3e42;
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-input-area textarea {
+      flex: 1;
+      padding: 10px;
+      background: #3c3c3c;
+      border: 1px solid #3e3e42;
+      color: #d4d4d4;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: none;
+      min-height: 60px;
+    }
+
+    .send-btn {
+      padding: 10px 20px;
+      background: #0e639c;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+      align-self: flex-end;
+    }
+
+    .send-btn:hover {
+      background: #1177bb;
+    }
+
+    /* Highlight styles for inspected elements */
+    .inspect-highlight {
+      outline: 2px solid #0e639c !important;
+      outline-offset: 2px;
+      background: rgba(14, 99, 156, 0.1) !important;
+    }
+
+    .inspect-selected {
+      outline: 2px solid #4ec9b0 !important;
+      outline-offset: 2px;
+      background: rgba(78, 201, 176, 0.1) !important;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1e1e1e;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #424242;
+      border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4e4e4e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="tabs">
+        <button class="tab" data-tab="code">Code</button>
+        <button class="tab active" data-tab="preview">Preview</button>
+        <button class="tab" data-tab="url">URL</button>
+      </div>
+      <div class="controls">
+        <button class="btn inspect-btn" id="inspectToggle">+ Inspect</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="content-area">
+        <!-- Code Editor -->
+        <div class="code-editor" id="codeTab">
+          <textarea id="codeInput" placeholder="Paste your HTML, CSS, and JavaScript code here..."><!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 400px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      width: 100%;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Flashcard Generator</h1>
+    <input type="text" id="topicInput" placeholder="Enter topic (e.g., Ancient Rome)">
+    <button id="generateButton">Generate Flashcards</button>
+    <div id="result"></div>
+  </div>
+  
+  <script>
+    document.getElementById('generateButton').addEventListener('click', function() {
+      const topic = document.getElementById('topicInput').value;
+      const result = document.getElementById('result');
+      if (topic) {
+        result.innerHTML = '<p style="margin-top:20px; color:#4caf50;">Generating flashcards for: ' + topic + '</p>';
+      } else {
+        result.innerHTML = '<p style="margin-top:20px; color:#f44336;">Please enter a topic!</p>';
+      }
+    });
+  </script>
+</body>
+</html></textarea>
+          <div class="code-actions">
+            <button class="btn" id="renderBtn">Render Preview</button>
+            <button class="btn" id="clearBtn" style="background: #d32f2f;">Clear</button>
+          </div>
+        </div>
+
+        <!-- Preview Container -->
+        <div class="preview-container active" id="previewTab">
+          <div class="url-bar" id="urlBar" style="display: none;">
+            <input type="text" id="urlInput" placeholder="Enter URL (e.g., https://example.com)">
+            <button class="btn" id="loadUrlBtn">Go</button>
+          </div>
+          <div class="preview-wrapper">
+            <iframe id="previewFrame" class="preview-iframe"></iframe>
+            <div class="inspect-overlay" id="inspectOverlay"></div>
+            <div class="inspect-badge" id="inspectBadge">Inspect Mode ON</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area">
+      <div class="chat-messages" id="chatMessages">
+        <div class="message">
+          <strong>💡 Welcome!</strong>
+          <p>1. Paste code in Code tab and click "Render Preview"</p>
+          <p>2. Or load a URL in URL tab</p>
+          <p>3. Click "+ Inspect" to select elements</p>
+          <p>4. Click any element to copy it to chat</p>
+          <p>5. Add your notes and click Send</p>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <textarea id="chatInput" placeholder="Type your notes here..."></textarea>
+        <button class="send-btn" id="sendBtn">Send ↑</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // App State
+    const app = {
+      currentTab: 'preview',
+      inspectMode: false,
+      selectedElement: null,
+      hoveredElement: null
+    };
+
+    // DOM Elements
+    const tabs = document.querySelectorAll('.tab');
+    const codeTab = document.getElementById('codeTab');
+    const previewTab = document.getElementById('previewTab');
+    const urlBar = document.getElementById('urlBar');
+    const codeInput = document.getElementById('codeInput');
+    const previewFrame = document.getElementById('previewFrame');
+    const inspectToggle = document.getElementById('inspectToggle');
+    const inspectOverlay = document.getElementById('inspectOverlay');
+    const inspectBadge = document.getElementById('inspectBadge');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const renderBtn = document.getElementById('renderBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const urlInput = document.getElementById('urlInput');
+    const loadUrlBtn = document.getElementById('loadUrlBtn');
+
+    // Tab Switching
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        
+        // Update active tab
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Show/hide content
+        codeTab.classList.remove('active');
+        previewTab.classList.remove('active');
+        
+        if (tabName === 'code') {
+          codeTab.classList.add('active');
+          urlBar.style.display = 'none';
+        } else if (tabName === 'preview') {
+          previewTab.classList.add('active');
+          urlBar.style.display = 'none';
+        } else if (tabName === 'url') {
+          previewTab.classList.add('active');
+          urlBar.style.display = 'flex';
+        }
+        
+        app.currentTab = tabName;
+      });
+    });
+
+    // Render Code
+    renderBtn.addEventListener('click', () => {
+      const code = codeInput.value;
+      previewFrame.srcdoc = code;
+      
+      // Switch to preview tab
+      tabs.forEach(t => t.classList.remove('active'));
+      tabs[1].classList.add('active');
+      codeTab.classList.remove('active');
+      previewTab.classList.add('active');
+      urlBar.style.display = 'none';
+      
+      addMessage('system', '✅ Code rendered successfully!');
+    });
+
+    // Clear Code
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Clear all code?')) {
+        codeInput.value = '';
+      }
+    });
+
+    // Load URL
+    loadUrlBtn.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      if (url) {
+        try {
+          previewFrame.src = url;
+          addMessage('system', `🌐 Loading URL: ${url}`);
+        } catch (e) {
+          addMessage('system', '❌ Failed to load URL. Some sites block iframe embedding.');
+        }
+      }
+    });
+
+    // Toggle Inspect Mode
+    inspectToggle.addEventListener('click', () => {
+      app.inspectMode = !app.inspectMode;
+      
+      if (app.inspectMode) {
+        inspectToggle.classList.add('active');
+        inspectToggle.textContent = '✓ Inspect ON';
+        inspectOverlay.classList.add('active');
+        inspectBadge.classList.add('active');
+        enableInspectMode();
+      } else {
+        inspectToggle.classList.remove('active');
+        inspectToggle.textContent = '+ Inspect';
+        inspectOverlay.classList.remove('active');
+        inspectBadge.classList.remove('active');
+        disableInspectMode();
+      }
+    });
+
+    // Enable Inspect Mode
+    function enableInspectMode() {
+      inspectOverlay.addEventListener('mousemove', handleMouseMove);
+      inspectOverlay.addEventListener('click', handleElementClick);
+    }
+
+    // Disable Inspect Mode
+    function disableInspectMode() {
+      inspectOverlay.removeEventListener('mousemove', handleMouseMove);
+      inspectOverlay.removeEventListener('click', handleElementClick);
+      
+      // Clear highlights
+      try {
+        const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        const highlighted = iframeDoc.querySelectorAll('.inspect-highlight, .inspect-selected');
+        highlighted.forEach(el => {
+          el.classList.remove('inspect-highlight', 'inspect-selected');
+        });
+      } catch (e) {
+        console.log('Cannot access iframe content');
+      }
+    }
+
+    // Handle Mouse Move (Highlight)
+    function handleMouseMove(e) {
+      try {
+        const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        const iframeRect = previewFrame.getBoundingClientRect();
+        
+        // Calculate position relative to iframe
+        const x = e.clientX - iframeRect.left;
+        const y = e.clientY - iframeRect.top;
+        
+        // Get element at position
+        const element = iframeDoc.elementFromPoint(x, y);
+        
+        if (element && element !== app.hoveredElement) {
+          // Remove previous highlight
+          if (app.hoveredElement) {
+            app.hoveredElement.classList.remove('inspect-highlight');
+          }
+          
+          // Add new highlight
+          if (!element.classList.contains('inspect-selected')) {
+            element.classList.add('inspect-highlight');
+          }
+          app.hoveredElement = element;
+        }
+      } catch (e) {
+        console.log('Cannot access iframe content');
+      }
+    }
+
+    // Handle Element Click (Select)
+    function handleElementClick(e) {
+      try {
+        const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        const iframeRect = previewFrame.getBoundingClientRect();
+        
+        const x = e.clientX - iframeRect.left;
+        const y = e.clientY - iframeRect.top;
+        
+        const element = iframeDoc.elementFromPoint(x, y);
+        
+        if (element) {
+          // Remove previous selection
+          const prevSelected = iframeDoc.querySelectorAll('.inspect-selected');
+          prevSelected.forEach(el => el.classList.remove('inspect-selected'));
+          
+          // Mark as selected
+          element.classList.remove('inspect-highlight');
+          element.classList.add('inspect-selected');
+          app.selectedElement = element;
+          
+          // Extract element info
+          const info = extractElementInfo(element);
+          
+          // Copy to chat
+          copyToChat(info);
+        }
+      } catch (e) {
+        addMessage('system', '❌ Cannot access iframe content. Try rendering code instead of loading external URLs.');
+      }
+    }
+
+    // Extract Element Information
+    function extractElementInfo(element) {
+      const tag = element.tagName.toLowerCase();
+      const id = element.id ? `id="${element.id}"` : '';
+      const classes = element.className ? `class="${element.className}"` : '';
+      const text = element.textContent.trim().substring(0, 50);
+      
+      // Get computed styles
+      const styles = window.getComputedStyle(element);
+      const importantStyles = {
+        background: styles.backgroundColor,
+        color: styles.color,
+        padding: styles.padding,
+        margin: styles.margin,
+        width: styles.width,
+        height: styles.height
+      };
+      
+      return {
+        tag,
+        id,
+        classes,
+        text,
+        html: element.outerHTML.substring(0, 200),
+        styles: importantStyles
+      };
+    }
+
+    // Copy to Chat
+    function copyToChat(info) {
+      const message = `📍 Selected Element:
+
+<${info.tag} ${info.id} ${info.classes}>
+${info.text ? `  ${info.text}` : ''}
+</${info.tag}>
+
+Styles:
+• Background: ${info.styles.background}
+• Color: ${info.styles.color}
+• Padding: ${info.styles.padding}
+
+What changes would you like to make?`;
+      
+      chatInput.value = message;
+      chatInput.focus();
+      
+      addMessage('selected', message);
+    }
+
+    // Add Message to Chat
+    function addMessage(type, content) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}`;
+      
+      if (type === 'selected') {
+        messageDiv.innerHTML = `<strong>📍 Element Selected</strong><pre>${escapeHtml(content)}</pre>`;
+      } else if (type === 'user') {
+        messageDiv.innerHTML = `<strong>👤 You:</strong><pre>${escapeHtml(content)}</pre>`;
+      } else {
+        messageDiv.innerHTML = `<strong>ℹ️ System:</strong><p>${content}</p>`;
+      }
+      
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Send Chat Message
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        sendMessage();
+      }
+    });
+
+    function sendMessage() {
+      const message = chatInput.value.trim();
+      if (message) {
+        addMessage('user', message);
+        chatInput.value = '';
+        
+        // Simulate response
+        setTimeout(() => {
+          addMessage('system', '✅ Message saved to history!');
+        }, 500);
+      }
+    }
+
+    // Utility: Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Auto-render initial code
+    window.addEventListener('load', () => {
+      const code = codeInput.value;
+      if (code.trim()) {
+        previewFrame.srcdoc = code;
+      }
+    });
+  </script>
+</body>
+</html>
