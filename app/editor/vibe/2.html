@@ -622,7 +622,7 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
     <button class="tab" data-view="api">API</button>
   </div>
   <div class="controls">
-    <button class="control-btn" title="Full screen" aria-label="Full screen">
+    <button class="control-btn" id="fullscreenBtn" title="Full screen" aria-label="Full screen">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
     </button>
     <button class="control-btn" id="deviceBtn" title="Device" aria-label="Device">
@@ -642,7 +642,7 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
             <span>Mobile</span>
         </button>
     </div>
-    <button class="control-btn" title="Reload" aria-label="Reload">
+    <button class="control-btn" id="reloadBtn" title="Reload" aria-label="Reload">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
     </button>
     <div class="separator"></div>
@@ -845,9 +845,11 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
     urlOverlay: document.getElementById('urlOverlay'),
     previewBadge: document.getElementById('previewBadge'),
     urlBadge: document.getElementById('urlBadge'),
-    inspectBtn: document.getElementById('inspectBtn'),
+    fullscreenBtn: document.getElementById('fullscreenBtn'),
     deviceBtn: document.getElementById('deviceBtn'),
     deviceMenu: document.getElementById('deviceMenu'),
+    reloadBtn: document.getElementById('reloadBtn'),
+    inspectBtn: document.getElementById('inspectBtn'),
     themeBtn: document.getElementById('themeBtn'),
     themeIconSun: document.getElementById('themeIconSun'),
     themeIconMoon: document.getElementById('themeIconMoon'),
@@ -1306,6 +1308,25 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
     if (e.key === 'Enter') el.goBtn.click();
   }
 
+  function reloadActiveFrame() {
+    addLog(`↻ Reloading ${state.view} view...`);
+    if (state.view === 'preview') {
+      const code = el.codeArea.value;
+      el.previewFrame.srcdoc = code;
+      addLog('✓ Preview reloaded.');
+    } else if (state.view === 'url') {
+      const currentSrc = el.urlFrame.src;
+      if (currentSrc && currentSrc !== 'about:blank') {
+        el.urlFrame.src = el.urlFrame.src;
+        addLog('✓ URL reloaded.');
+      } else {
+        addLog('⚠️ No URL to reload.');
+      }
+    } else {
+      addLog(`⚠️ Reload is not applicable for the "${state.view}" view.`);
+    }
+  }
+
   el.inspectBtn.onclick = toggleInspect;
 
   document.addEventListener('keydown', (e) => {
@@ -1636,6 +1657,9 @@ ${formatInlineStyle(info.inlineStyle)}
         addLog(logMessage);
         hideFileContextMenu();
     });
+    
+    el.fullscreenBtn.onclick = reloadActiveFrame;
+    el.reloadBtn.onclick = reloadActiveFrame;
 
     addLog('✓ Application started');
   }
