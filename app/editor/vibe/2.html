@@ -1326,6 +1326,32 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
       addLog(`⚠️ Reload is not applicable for the "${state.view}" view.`);
     }
   }
+  
+  function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+      let elementToFullscreen;
+      if (state.view === 'preview') {
+        elementToFullscreen = el.previewFrame.parentElement;
+      } else if (state.view === 'url') {
+        elementToFullscreen = el.urlFrame.parentElement;
+      } else {
+        addLog(`⚠️ Fullscreen is not applicable for the "${state.view}" view.`);
+        return;
+      }
+
+      if (elementToFullscreen && elementToFullscreen.requestFullscreen) {
+        elementToFullscreen.requestFullscreen().catch(err => {
+          addLog(`⚠️ Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+        addLog('⤢ Entered fullscreen mode.');
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        addLog('↘ Exited fullscreen mode.');
+      }
+    }
+  }
 
   el.inspectBtn.onclick = toggleInspect;
 
@@ -1658,7 +1684,7 @@ ${formatInlineStyle(info.inlineStyle)}
         hideFileContextMenu();
     });
     
-    el.fullscreenBtn.onclick = reloadActiveFrame;
+    el.fullscreenBtn.onclick = toggleFullScreen;
     el.reloadBtn.onclick = reloadActiveFrame;
 
     addLog('✓ Application started');
