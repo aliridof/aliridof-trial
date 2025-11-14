@@ -77,7 +77,7 @@ body{
   color: var(--accent);
   border-bottom-color: var(--accent);
 }
-.controls{display:flex;gap:8px;align-items:center}
+.controls{display:flex;gap:8px;align-items:center;position: relative;}
 .btn{
   display: inline-flex;
   align-items: center;
@@ -286,6 +286,13 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
 }
 .dropdown-item:hover {
     background: var(--hover);
+}
+.dropdown-item.active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.dropdown-item.active svg {
+    color: var(--accent-text);
 }
 .dropdown-item svg {
     color: var(--text-secondary);
@@ -568,6 +575,31 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
   display: none;
 }
 .badge.active{display:block}
+/* --- Start Device Preview --- */
+.preview-wrap.device-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  padding: 32px;
+  overflow: auto;
+}
+.preview-wrap.device-mode .preview-frame {
+  flex-shrink: 0;
+  box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1);
+  border: 1px solid var(--border);
+  transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
+}
+[data-theme="dark"] .preview-wrap.device-mode .preview-frame {
+  box-shadow: 0 10px 30px -5px rgba(0,0,0,0.3);
+}
+#deviceMenu {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+}
+/* --- End Device Preview --- */
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:var(--bg-secondary)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
@@ -593,9 +625,23 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
     <button class="control-btn" title="Full screen" aria-label="Full screen">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
     </button>
-    <button class="control-btn" title="Device" aria-label="Device">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+    <button class="control-btn" id="deviceBtn" title="Device" aria-label="Device">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2" ry="2"></rect><path d="M12 18h.01"></path><path d="M19 4h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-1"></path><path d="M5 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h1"></path></svg>
     </button>
+    <div class="dropdown-menu" id="deviceMenu">
+        <button class="dropdown-item active" data-device="desktop">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            <span>Desktop</span>
+        </button>
+        <button class="dropdown-item" data-device="tablet">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            <span>Tablet</span>
+        </button>
+        <button class="dropdown-item" data-device="mobile">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            <span>Mobile</span>
+        </button>
+    </div>
     <button class="control-btn" title="Reload" aria-label="Reload">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
     </button>
@@ -620,7 +666,7 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
           <button class="btn" id="sendBtn" title="Send (Ctrl+Enter)">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
-          <button class="btn outline" id="clearBtn" title="Clear Input">
+          <button class="btn outline" id="clearBtn" title="Delete all messages">
              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
           <button class="btn outline" id="exportBtn" title="Export Chat">
@@ -779,6 +825,7 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
 
   const state = {
     view: 'preview',
+    device: 'desktop',
     inspect: false,
     frame: null,
     overlay: null,
@@ -799,6 +846,8 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
     previewBadge: document.getElementById('previewBadge'),
     urlBadge: document.getElementById('urlBadge'),
     inspectBtn: document.getElementById('inspectBtn'),
+    deviceBtn: document.getElementById('deviceBtn'),
+    deviceMenu: document.getElementById('deviceMenu'),
     themeBtn: document.getElementById('themeBtn'),
     themeIconSun: document.getElementById('themeIconSun'),
     themeIconMoon: document.getElementById('themeIconMoon'),
@@ -942,6 +991,18 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
         }
     }
 
+    function clearAll() {
+        if (internalState.messages.length === 0) {
+            deps.addLog('⚠️ No messages to clear.');
+            return;
+        }
+        if (confirm('Delete all messages?')) {
+            internalState.messages.length = 0;
+            deps.chatMessages.innerHTML = '';
+            deps.addLog('✓ All messages deleted.');
+        }
+    }
+
     function exportChat() {
         if (internalState.messages.length === 0) return deps.addLog('⚠️ No messages to export');
         let text = '=== CHAT EXPORT ===\n\n';
@@ -967,7 +1028,7 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
         deps.exportBtn.onclick = exportChat;
     }
 
-    return { init, copy, edit, saveEdit, cancelEdit, delete: del };
+    return { init, copy, edit, saveEdit, cancelEdit, delete: del, clearAll };
   })();
   window.messageManager = messageManager;
 
@@ -1114,6 +1175,51 @@ textarea:focus{outline:2px solid var(--accent);border-color:transparent}
     };
   });
   
+  function setDevice(device) {
+      if (!device) return;
+      state.device = device;
+      
+      const dimensions = {
+          desktop: { width: '100%', height: '100%', borderRadius: '0', border: 'none' },
+          tablet: { width: '768px', height: '1024px', borderRadius: '12px', border: '1px solid var(--border)' },
+          mobile: { width: '375px', height: '812px', borderRadius: '12px', border: '1px solid var(--border)' }
+      };
+      
+      const { width, height, borderRadius, border } = dimensions[device];
+      
+      [el.previewFrame, el.urlFrame].forEach(frame => {
+          frame.style.width = width;
+          frame.style.height = height;
+          frame.style.borderRadius = borderRadius;
+          frame.style.border = border;
+      });
+      
+      document.querySelectorAll('.preview-wrap').forEach(wrap => {
+          wrap.classList.toggle('device-mode', device !== 'desktop');
+      });
+      
+      el.deviceMenu.querySelectorAll('.dropdown-item').forEach(item => {
+          item.classList.toggle('active', item.dataset.device === device);
+      });
+      
+      el.deviceBtn.classList.toggle('active', device !== 'desktop');
+      
+      addLog(`✓ Switched to ${device} view`);
+      el.deviceMenu.classList.remove('active');
+  }
+
+  el.deviceBtn.onclick = (e) => {
+      e.stopPropagation();
+      el.deviceMenu.classList.toggle('active');
+  };
+
+  el.deviceMenu.addEventListener('click', (e) => {
+      const item = e.target.closest('.dropdown-item');
+      if (item && item.dataset.device) {
+          setDevice(item.dataset.device);
+      }
+  });
+
   function setTheme(theme) {
       document.body.dataset.theme = theme;
       if (theme === 'dark') {
@@ -1403,8 +1509,7 @@ ${formatInlineStyle(info.inlineStyle)}
   }
 
   el.clearBtn.onclick = () => {
-    if (el.chatInput.value.trim() && !confirm('Clear input?')) return;
-    el.chatInput.value = '';
+    messageManager.clearAll();
   };
 
   function addLog(text) {
@@ -1476,6 +1581,7 @@ ${formatInlineStyle(info.inlineStyle)}
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     setTheme(prefersDark ? 'dark' : 'light');
     setActiveView('preview');
+    setDevice('desktop');
     updateEditorLayout();
 
     messageManager.init({
@@ -1564,6 +1670,9 @@ ${formatInlineStyle(info.inlineStyle)}
     const target = e.target;
     if (el.addFileMenu.classList.contains('active') && !el.addFileMenu.contains(target) && !el.addFileMenuBtn.contains(target)) {
         el.addFileMenu.classList.remove('active');
+    }
+    if (el.deviceMenu.classList.contains('active') && !el.deviceMenu.contains(target) && !el.deviceBtn.contains(target)) {
+        el.deviceMenu.classList.remove('active');
     }
     if (el.fileContextMenu.classList.contains('active') && !el.fileContextMenu.contains(target) && !target.closest('.file-item-actions')) {
         hideFileContextMenu();
